@@ -46,6 +46,14 @@
 #define SNES_DATA_PIN	PINC
 #define SNES_DATA_BIT	(1<<2)
 
+#define HOME_BUTTON_PORT	PORTD
+#define HOME_BUTTON_DDR	DDRD
+#define HOME_BUTTON_PIN    PIND
+#define HOME_BUTTON_BIT	(1<<2)
+
+#define HOME_BUTTON_DATA_BIT (1<<4)
+
+
 /********* IO port manipulation macros **********/
 #define SNES_LATCH_LOW()	do { SNES_LATCH_PORT &= ~(SNES_LATCH_BIT); } while(0)
 #define SNES_LATCH_HIGH()	do { SNES_LATCH_PORT |= SNES_LATCH_BIT; } while(0)
@@ -87,6 +95,12 @@ static char snesInit(void)
 
 	// LATCH is Active HIGH
 	SNES_LATCH_PORT &= ~(SNES_LATCH_BIT);
+	
+	// home button is input
+	HOME_BUTTON_DDR &= ~(HOME_BUTTON_BIT);
+	
+	// home button is normally high
+	HOME_BUTTON_PORT |= HOME_BUTTON_BIT;
 
 	snesUpdate();
 
@@ -112,7 +126,7 @@ static char snesInit(void)
         10              X
         11              L
         12              R
-        13              none (always high)
+        13              HOME <-- HOME extra pin is mapped here
         14              none (always high)
         15              none (always high)
         16              none (always high)
@@ -123,10 +137,12 @@ static char snesUpdate(void)
 {
 	int i;
 	unsigned char tmp=0;
+	unsigned char home_state=0;
 
 	SNES_LATCH_HIGH();
 	_delay_us(12);
 	SNES_LATCH_LOW();
+	home_state = HOME_BUTTON_PIN;
 
 	for (i=0; i<8; i++)
 	{
@@ -153,6 +169,10 @@ static char snesUpdate(void)
 		_delay_us(6);
 		SNES_CLOCK_HIGH();
 	}
+	
+	// map home to button 13
+	tmp |= (!(home_state & HOME_BUTTON_BIT)) ? HOME_BUTTON_DATA_BIT : 0);
+	
 	last_read_controller_bytes[1] = tmp;
 
 	return 0;
@@ -174,11 +194,11 @@ static void snesGetReport(gamepad_data *dst)
 		h = last_read_controller_bytes[1];
 
 
-		// The 4 last bits are always high if an SNES controller
+		// The 3 last bits are always high if an SNES controller
 		// is connected. With a NES controller, they are low.
 		// (High on the wire is a 0 here due to the snesUpdate() implementation)
 		//
-		if ((h & 0x0f) == 0x0f) {
+		if ((h & 0x07) == 0x07) {
 			nes_mode = 1;
 		} else {
 			nes_mode = 0;

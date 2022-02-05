@@ -276,9 +276,10 @@ void dataToClassic(const gamepad_data *src, classic_pad_data *dst, char first_re
 				sync_config();
 			}
 
-			if (isTripleClick(src->snes.buttons & SNES_BTN_START)) {
-				dst->buttons |= CPAD_BTN_HOME;
-			}
+			//if (isTripleClick(src->snes.buttons & SNES_BTN_START)) {
+			//	dst->buttons |= CPAD_BTN_HOME;
+			//}
+			if (src->snes.buttons & SNES_BTN_HOME) { dst->buttons |= CPAD_BTN_HOME; }
 
 			// Simulate L/R fully pressed values (like the analogue-less classic controller pro does)
 			if (dst->buttons & CPAD_BTN_TRIG_LEFT) {
@@ -307,9 +308,10 @@ void dataToClassic(const gamepad_data *src, classic_pad_data *dst, char first_re
 			if (src->nes.buttons & NES_BTN_DPAD_LEFT) { dst->buttons |= CPAD_BTN_DPAD_LEFT; }
 			if (src->nes.buttons & NES_BTN_DPAD_RIGHT) { dst->buttons |= CPAD_BTN_DPAD_RIGHT; }
 
-			if (isTripleClick(src->nes.buttons & NES_BTN_START)) {
-				dst->buttons |= CPAD_BTN_HOME;
-			}
+			//if (isTripleClick(src->nes.buttons & NES_BTN_START)) {
+			//	dst->buttons |= CPAD_BTN_HOME;
+			//}
+			if (src->snes.buttons & NES_BTN_HOME) { dst->buttons |= CPAD_BTN_HOME; }
 
 			break;
 
