@@ -171,7 +171,7 @@ static char snesUpdate(void)
 	}
 	
 	// map home to button 13
-	tmp |= (!(home_state & HOME_BUTTON_BIT)) ? HOME_BUTTON_DATA_BIT : 0);
+	tmp |= (!(home_state & HOME_BUTTON_BIT)) ? HOME_BUTTON_DATA_BIT : 0;
 	
 	last_read_controller_bytes[1] = tmp;
 
