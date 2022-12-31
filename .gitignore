@@ -3,3 +3,9 @@
 *.map
 *.hex
 *.swp
+
+# temporarily don't check in board
+**/board/
+
+# zip files
+*.zip

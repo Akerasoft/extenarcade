@@ -30,7 +30,7 @@
 #include "gamepads.h"
 #include "snes.h"
 
-#define GAMEPAD_BYTES	2
+#define GAMEPAD_BYTES	3
 
 /******** IO port definitions **************/
 #define SNES_LATCH_DDR	DDRC
@@ -51,7 +51,7 @@
 #define HOME_BUTTON_PIN    PIND
 #define HOME_BUTTON_BIT	(1<<2)
 
-#define HOME_BUTTON_DATA_BIT (1<<4)
+#define HOME_BUTTON_DATA_BIT (1<<3)
 
 
 /********* IO port manipulation macros **********/
@@ -61,6 +61,7 @@
 #define SNES_CLOCK_HIGH()	do { SNES_CLOCK_PORT |= SNES_CLOCK_BIT; } while(0)
 
 #define SNES_GET_DATA()	(SNES_DATA_PIN & SNES_DATA_BIT)
+#define SNES_GET_HOME()	(home_state & HOME_BUTTON_BIT)
 
 /*********** prototypes *************/
 static char snesInit(void);
@@ -112,24 +113,24 @@ static char snesInit(void)
 
 /*
  *
-       Clock Cycle     Button Reported
-        ===========     ===============
-        1               B
-        2               Y
-        3               Select
-        4               Start
-        5               Up on joypad
-        6               Down on joypad
-        7               Left on joypad
-        8               Right on joypad
-        9               A
-        10              X
-        11              L
-        12              R
-        13              HOME <-- HOME extra pin is mapped here
-        14              none (always high)
-        15              none (always high)
-        16              none (always high)
+       Clock Cycle     Button Reported     BIT     HEX
+        ===========     ===============    ===     =====
+        1               B                   D7     0x80
+        2               Y                   D6     0x40
+        3               Select              D5     0x20
+        4               Start               D4     0x10
+        5               Up on joypad        D3     0x08
+        6               Down on joypad      D2     0x04
+        7               Left on joypad      D1     0x02
+        8               Right on joypad     D0     0x01
+        9               A                   D7     0x80
+        10              X                   D6     0x40
+        11              L                   D5     0x20
+        12              R                   D4     0x10
+        13              none (always high)  D3     0x08
+        14              none (always high)  D2     0x04
+        15              none (always high)  D1     0x02
+        16              none (always high)  D0     0x01
  *
  */
 
@@ -170,10 +171,14 @@ static char snesUpdate(void)
 		SNES_CLOCK_HIGH();
 	}
 	
-	// map home to button 13
-	tmp |= (!(home_state & HOME_BUTTON_BIT)) ? HOME_BUTTON_DATA_BIT : 0;
-	
 	last_read_controller_bytes[1] = tmp;
+
+      // prepare to read home
+	tmp = 0;
+	// map home to 3rd byte lowest bit (3rd is 2 in zero based numbering)
+	if (!SNES_GET_HOME()) { tmp |= 0x1; }
+	
+	last_read_controller_bytes[2] = tmp;
 
 	return 0;
 }
@@ -186,19 +191,20 @@ static char snesChanged(void)
 
 static void snesGetReport(gamepad_data *dst)
 {
-	unsigned char h, l;
+	unsigned char h, l, e;
 
 	if (dst != NULL)
 	{
 		l = last_read_controller_bytes[0];
 		h = last_read_controller_bytes[1];
+		e = last_read_controller_bytes[2];
 
 
-		// The 3 last bits are always high if an SNES controller
+		// The 4 last bits are always high if an SNES controller
 		// is connected. With a NES controller, they are low.
 		// (High on the wire is a 0 here due to the snesUpdate() implementation)
 		//
-		if ((h & 0x07) == 0x07) {
+		if ((h & 0x0F) == 0x0F) {
 			nes_mode = 1;
 		} else {
 			nes_mode = 0;
@@ -210,12 +216,14 @@ static void snesGetReport(gamepad_data *dst)
 			dst->nes.pad_type = PAD_TYPE_NES;
 			dst->nes.buttons = l;
 			dst->nes.raw_data[0] = l;
+			dst->nes.raw_data[1] = e;
 		} else {
 			dst->nes.pad_type = PAD_TYPE_SNES;
 			dst->snes.buttons = l;
 			dst->snes.buttons |= h<<8;
 			dst->snes.raw_data[0] = l;
 			dst->snes.raw_data[1] = h;
+			dst->snes.raw_data[2] = e;
 		}
 	}
 	memcpy(last_reported_controller_bytes,

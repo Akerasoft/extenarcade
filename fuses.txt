@@ -1,0 +1,3 @@
+EFUSE=0x01 (could be 0xF9) these are equivallent because you cannot set bits 3-7 they are reserved.
+HFUSE=0xDF
+LFUSE=0xDF
