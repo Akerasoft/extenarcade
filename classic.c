@@ -279,7 +279,7 @@ void dataToClassic(const gamepad_data *src, classic_pad_data *dst, char first_re
 			//if (isTripleClick(src->snes.buttons & SNES_BTN_START)) {
 			//	dst->buttons |= CPAD_BTN_HOME;
 			//}
-			if (src->nes.raw_data[2] & 0x1) { dst->buttons |= CPAD_BTN_HOME; }
+			if (src->snes.raw_data[2] & 0x1) { dst->buttons |= CPAD_BTN_HOME; }
 
 			// Simulate L/R fully pressed values (like the analogue-less classic controller pro does)
 			if (dst->buttons & CPAD_BTN_TRIG_LEFT) {
