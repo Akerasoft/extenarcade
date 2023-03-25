@@ -51,7 +51,7 @@
 #define HOME_BUTTON_PIN    PIND
 #define HOME_BUTTON_BIT	(1<<2)
 
-#define HOME_BUTTON_DATA_BIT (1<<4)
+#define HOME_BUTTON_DATA_BIT (1<<3)
 
 
 /********* IO port manipulation macros **********/
@@ -61,6 +61,7 @@
 #define SNES_CLOCK_HIGH()	do { SNES_CLOCK_PORT |= SNES_CLOCK_BIT; } while(0)
 
 #define SNES_GET_DATA()	(SNES_DATA_PIN & SNES_DATA_BIT)
+#define HOME_GET_DATA()	(HOME_BUTTON_PIN & HOME_BUTTON_BIT)
 
 /*********** prototypes *************/
 static char snesInit(void);
@@ -137,12 +138,10 @@ static char snesUpdate(void)
 {
 	int i;
 	unsigned char tmp=0;
-	unsigned char home_state=0;
 
 	SNES_LATCH_HIGH();
 	_delay_us(12);
 	SNES_LATCH_LOW();
-	home_state = HOME_BUTTON_PIN;
 
 	for (i=0; i<8; i++)
 	{
@@ -171,7 +170,8 @@ static char snesUpdate(void)
 	}
 	
 	// map home to button 13
-	tmp |= (!(home_state & HOME_BUTTON_BIT)) ? HOME_BUTTON_DATA_BIT : 0;
+	tmp &= ~HOME_BUTTON_DATA_BIT;
+	tmp |= (!HOME_GET_DATA()) ? HOME_BUTTON_DATA_BIT : 0;
 	
 	last_read_controller_bytes[1] = tmp;
 
