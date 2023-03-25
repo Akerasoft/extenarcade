@@ -51,7 +51,7 @@
 #define HOME_BUTTON_PIN    PIND
 #define HOME_BUTTON_BIT	(1<<2)
 
-#define HOME_BUTTON_DATA_BIT (1<<3)
+#define HOME_BUTTON_DATA_BIT 0x08
 
 
 /********* IO port manipulation macros **********/
@@ -169,9 +169,25 @@ static char snesUpdate(void)
 		SNES_CLOCK_HIGH();
 	}
 	
-	// map home to button 13
-	tmp &= ~HOME_BUTTON_DATA_BIT;
-	tmp |= (!HOME_GET_DATA()) ? HOME_BUTTON_DATA_BIT : 0;
+	// The 4 last bits are always high if an SNES controller
+	// is connected. With a NES controller, they are low.
+	// (High on the wire is a 0 here due to the snesUpdate() implementation)
+	if ((tmp & 0x0F) == 0x0F) {
+		nes_mode = 1;
+	} else {
+		nes_mode = 0;
+	}
+	
+	if (nes_mode)
+	{
+		tmp = ((~HOME_BUTTON_PIN & HOME_BUTTON_BIT) ? HOME_BUTTON_DATA_BIT : 0);
+	}
+	else
+	{
+		// make it unpressed even if SNES controller has 13 buttons
+		tmp = tmp & ~HOME_BUTTON_DATA_BIT;
+		tmp |= ((~HOME_BUTTON_PIN & HOME_BUTTON_BIT) ? HOME_BUTTON_DATA_BIT : 0);
+	}
 	
 	last_read_controller_bytes[1] = tmp;
 
@@ -194,22 +210,24 @@ static void snesGetReport(gamepad_data *dst)
 		h = last_read_controller_bytes[1];
 
 
-		// The 3 last bits are always high if an SNES controller
+		// The 4 last bits are always high if an SNES controller
 		// is connected. With a NES controller, they are low.
 		// (High on the wire is a 0 here due to the snesUpdate() implementation)
 		//
-		if ((h & 0x07) == 0x07) {
-			nes_mode = 1;
-		} else {
-			nes_mode = 0;
-		}
+		//if ((h & 0x07) == 0x07) {
+		//	nes_mode = 1;
+		//} else {
+		//	nes_mode = 0;
+		//}
 
 		if (nes_mode) {
 			// Nes controllers send the data in this order:
 			// A B Sel St U D L R
 			dst->nes.pad_type = PAD_TYPE_NES;
 			dst->nes.buttons = l;
+			dst->nes.buttons |= h<<8;
 			dst->nes.raw_data[0] = l;
+			dst->nes.raw_data[1] = h;
 		} else {
 			dst->nes.pad_type = PAD_TYPE_SNES;
 			dst->snes.buttons = l;

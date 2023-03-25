@@ -311,7 +311,7 @@ void dataToClassic(const gamepad_data *src, classic_pad_data *dst, char first_re
 			//if (isTripleClick(src->nes.buttons & NES_BTN_START)) {
 			//	dst->buttons |= CPAD_BTN_HOME;
 			//}
-			if (src->snes.buttons & NES_BTN_HOME) { dst->buttons |= CPAD_BTN_HOME; }
+			if (src->nes.buttons & NES_BTN_HOME) { dst->buttons |= CPAD_BTN_HOME; }
 
 			break;
 

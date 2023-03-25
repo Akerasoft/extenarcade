@@ -64,15 +64,17 @@ static void hwInit(void)
 	/* PORTD
 	 * 0: out0
 	 * 1: out0
-	 * 2: out0
+	 * 2: out0 <-- change to input
 	 * 3: out0
 	 * 4: out1 // Tied to VCC on Multiuse PCB2 for routing reasons
 	 * 5: out0
 	 * 6: in-pu // Pulled to GND on mutluse db9 v3. Wired to VCC on multiuse PCB2.
 	 * 7: out0
 	 */
-	PORTD = 0x60;
-	DDRD = 0xbf;
+	//PORTD = 0x60;
+	PORTD = 0x64; // change to 0x64 to make my PCB work.
+	//DDRD = 0xbf;
+	DDRD = 0xbb; // change to 0xBB to make my PCB work.
 
 	_delay_ms(1);
 
