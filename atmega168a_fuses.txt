@@ -1,0 +1,7 @@
+ATMEGA88PA
+Fuses
+Runs at 8MHz internal oscilator.
+
+EFUSE=0xF9
+HFUSE=0xdF
+LFUSE=0xE2

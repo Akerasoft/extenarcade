@@ -1,0 +1,6 @@
+ATMEGA8.
+Fuses for SNESMote
+Runs at 8MHz internal oscilator.
+
+HFUSE=0xd9
+LFUSE=0xE4
